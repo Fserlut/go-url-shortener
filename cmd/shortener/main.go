@@ -43,13 +43,13 @@ func postHandler(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 	}
-	shortUrl := getShortUrl()
-	urlStorage[shortUrl] = url
+	shortURL := getShortURL()
+	urlStorage[shortURL] = url
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(fmt.Sprintf("http://%s%s", host, shortUrl)))
+	res.Write([]byte(fmt.Sprintf("http://%s%s", host, shortURL)))
 }
 
-func getShortUrl() string {
+func getShortURL() string {
 	return "/url" + strconv.Itoa(len(urlStorage)+1)
 }
 
