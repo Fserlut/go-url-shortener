@@ -38,7 +38,7 @@ func createShortLink(res http.ResponseWriter, req *http.Request) {
 	shortURL := getShortURL()
 	urlStorage[shortURL] = url
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(fmt.Sprintf("%s/%s", baseReturnUrl, shortURL)))
+	res.Write([]byte(fmt.Sprintf("%s/%s", baseReturnURL, shortURL)))
 }
 
 func getShortURL() string {
