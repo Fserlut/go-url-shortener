@@ -22,4 +22,4 @@ vendor/
 .idea
 .vscode
 
-.shortenertest-darwin-arm64
+shortenertest-darwin-arm64
