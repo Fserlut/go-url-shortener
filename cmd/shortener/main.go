@@ -33,10 +33,13 @@ func getHandler(res http.ResponseWriter, req *http.Request) {
 func postHandler(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
+		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	url := string(body)
+	if len(url) == 0 {
+		res.WriteHeader(http.StatusBadRequest)
+	}
 	for _, s2 := range urlStorage {
 		if s2 == url {
 			res.WriteHeader(http.StatusBadRequest)
@@ -56,6 +59,7 @@ func getShortURL() string {
 func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc(`/`, mainRoute)
+	urlStorage["/url1"] = "https://ya.ru"
 
 	err := http.ListenAndServe(host, mux)
 	if err != nil {
