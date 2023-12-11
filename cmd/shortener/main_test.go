@@ -77,7 +77,11 @@ func TestHandlers(t *testing.T) {
 			request := httptest.NewRequest(test.request.method, test.target, bodyReader)
 			// создаём новый Recorder
 			w := httptest.NewRecorder()
-			mainRoute(w, request)
+			if test.request.method == http.MethodGet {
+				redirectToLink(w, request)
+			} else {
+				createShortLink(w, request)
+			}
 
 			res := w.Result()
 
