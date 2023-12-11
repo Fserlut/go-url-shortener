@@ -48,16 +48,13 @@ func getShortURL() string {
 func main() {
 	parseFlags()
 	r := chi.NewRouter()
-	r.Get(`/{id}`, redirectToLink)
-	r.Post(`/`, createShortLink)
+	r.Post("/", createShortLink)
+	r.Get("/{id}", redirectToLink)
 	urlStorage["url1"] = "https://ya.ru"
 
-	if err := run(r); err != nil {
+	fmt.Println("Running server on", serverAddress)
+
+	if err := http.ListenAndServe(serverAddress, r); err != nil {
 		panic(err)
 	}
-}
-
-func run(r http.Handler) error {
-	fmt.Println("Running server on", serverAddress)
-	return http.ListenAndServe(serverAddress, r)
 }

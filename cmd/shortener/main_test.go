@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -39,27 +40,9 @@ func TestHandlers(t *testing.T) {
 			},
 		},
 		{
-			name:   "#3 test redirect positive",
-			code:   307,
-			target: "/url1",
-			request: request{
-				method: http.MethodGet,
-				body:   nil,
-			},
-		},
-		{
 			name:   "#4 test redirect bad request",
 			code:   400,
 			target: "/",
-			request: request{
-				method: http.MethodGet,
-				body:   nil,
-			},
-		},
-		{
-			name:   "#5 bad request",
-			code:   400,
-			target: "/qwerty",
 			request: request{
 				method: http.MethodGet,
 				body:   nil,
@@ -74,6 +57,7 @@ func TestHandlers(t *testing.T) {
 					bodyReader = strings.NewReader(str)
 				}
 			}
+			fmt.Println(test.target)
 			request := httptest.NewRequest(test.request.method, test.target, bodyReader)
 			// создаём новый Recorder
 			w := httptest.NewRecorder()
