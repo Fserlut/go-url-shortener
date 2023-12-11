@@ -8,12 +8,10 @@ import (
 	"strconv"
 )
 
-const host = "localhost:8080"
-
 var urlStorage = make(map[string]string)
 
 func redirectToLink(res http.ResponseWriter, req *http.Request) {
-	if value, ok := urlStorage[req.URL.Path]; ok {
+	if value, ok := urlStorage[chi.URLParam(req, "id")]; ok {
 		fmt.Println(value)
 		http.Redirect(res, req, value, http.StatusTemporaryRedirect)
 		return
@@ -40,21 +38,26 @@ func createShortLink(res http.ResponseWriter, req *http.Request) {
 	shortURL := getShortURL()
 	urlStorage[shortURL] = url
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(fmt.Sprintf("http://%s%s", host, shortURL)))
+	res.Write([]byte(fmt.Sprintf("%s/%s", baseReturnUrl, shortURL)))
 }
 
 func getShortURL() string {
-	return "/url" + strconv.Itoa(len(urlStorage)+1)
+	return "url" + strconv.Itoa(len(urlStorage)+1)
 }
 
 func main() {
+	parseFlags()
 	r := chi.NewRouter()
 	r.Get(`/{id}`, redirectToLink)
 	r.Post(`/`, createShortLink)
-	urlStorage["/url1"] = "https://ya.ru"
+	urlStorage["url1"] = "https://ya.ru"
 
-	err := http.ListenAndServe(host, r)
-	if err != nil {
+	if err := run(r); err != nil {
 		panic(err)
 	}
+}
+
+func run(r http.Handler) error {
+	fmt.Println("Running server on", serverAddress)
+	return http.ListenAndServe(serverAddress, r)
 }
