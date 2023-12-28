@@ -2,9 +2,10 @@ package handlers
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
 
 	"github.com/Fserlut/go-url-shortener/internal/config"
 	"github.com/Fserlut/go-url-shortener/internal/storage"
@@ -15,7 +16,7 @@ type Handlers struct {
 	cfg   *config.Config
 }
 
-func (h *Handlers) CreateShortUrl(res http.ResponseWriter, req *http.Request) {
+func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
@@ -25,7 +26,7 @@ func (h *Handlers) CreateShortUrl(res http.ResponseWriter, req *http.Request) {
 	if len(url) == 0 {
 		res.WriteHeader(http.StatusBadRequest)
 	}
-	if _, ok := h.store.URlStorage[url]; ok {
+	if _, ok := h.store.URLStorage[url]; ok {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -35,7 +36,7 @@ func (h *Handlers) CreateShortUrl(res http.ResponseWriter, req *http.Request) {
 }
 
 func (h *Handlers) RedirectToLink(res http.ResponseWriter, req *http.Request) {
-	if value, ok := h.store.URlStorage[chi.URLParam(req, "id")]; ok {
+	if value, ok := h.store.URLStorage[chi.URLParam(req, "id")]; ok {
 		http.Redirect(res, req, value, http.StatusTemporaryRedirect)
 		return
 	}

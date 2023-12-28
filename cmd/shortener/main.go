@@ -18,7 +18,7 @@ func main() {
 
 	h := handlers.InitHandlers(store, cfg)
 	r := chi.NewRouter()
-	r.Post("/", h.CreateShortUrl)
+	r.Post("/", h.CreateShortURL)
 	r.Get("/{id}", h.RedirectToLink)
 
 	fmt.Println("Running server on", cfg.ServerAddress)

@@ -5,17 +5,17 @@ import (
 )
 
 type Storage struct {
-	URlStorage map[string]string
+	URLStorage map[string]string
 }
 
 func (s *Storage) AddUrl(url string) string {
 	shortURL := random.GetShortURL()
-	s.URlStorage[shortURL] = url
+	s.URLStorage[shortURL] = url
 	return shortURL
 }
 
 func InitStorage() *Storage {
 	return &Storage{
-		URlStorage: make(map[string]string),
+		URLStorage: make(map[string]string),
 	}
 }

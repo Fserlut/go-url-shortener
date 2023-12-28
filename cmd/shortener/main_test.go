@@ -2,15 +2,17 @@ package main
 
 import (
 	"fmt"
-	"github.com/Fserlut/go-url-shortener/internal/config"
-	"github.com/Fserlut/go-url-shortener/internal/handlers"
-	"github.com/Fserlut/go-url-shortener/internal/storage"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/Fserlut/go-url-shortener/internal/config"
+	"github.com/Fserlut/go-url-shortener/internal/handlers"
+	"github.com/Fserlut/go-url-shortener/internal/storage"
 )
 
 func TestHandlers(t *testing.T) {
@@ -72,7 +74,7 @@ func TestHandlers(t *testing.T) {
 			if test.request.method == http.MethodGet {
 				h.RedirectToLink(w, request)
 			} else {
-				h.CreateShortUrl(w, request)
+				h.CreateShortURL(w, request)
 			}
 
 			res := w.Result()
