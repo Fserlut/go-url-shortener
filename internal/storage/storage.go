@@ -8,7 +8,7 @@ type Storage struct {
 	URLStorage map[string]string
 }
 
-func (s *Storage) AddUrl(url string) string {
+func (s *Storage) AddURL(url string) string {
 	shortURL := random.GetShortURL()
 	s.URLStorage[shortURL] = url
 	return shortURL

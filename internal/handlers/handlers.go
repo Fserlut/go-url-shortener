@@ -30,7 +30,7 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	shortURL := h.store.AddUrl(url)
+	shortURL := h.store.AddURL(url)
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte(fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, shortURL)))
 }
