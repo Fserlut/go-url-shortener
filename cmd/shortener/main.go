@@ -2,17 +2,21 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"io"
+	"math/rand"
 	"net/http"
-	"strconv"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/Fserlut/go-url-shortener/internal/config"
+	"github.com/Fserlut/go-url-shortener/internal/storage"
 )
 
 var urlStorage = make(map[string]string)
 
 func redirectToLink(res http.ResponseWriter, req *http.Request) {
 	if value, ok := urlStorage[chi.URLParam(req, "id")]; ok {
-		fmt.Println(value)
 		http.Redirect(res, req, value, http.StatusTemporaryRedirect)
 		return
 	}
@@ -29,32 +33,35 @@ func createShortLink(res http.ResponseWriter, req *http.Request) {
 	if len(url) == 0 {
 		res.WriteHeader(http.StatusBadRequest)
 	}
-	for _, s2 := range urlStorage {
-		if s2 == url {
-			res.WriteHeader(http.StatusBadRequest)
-			return
-		}
+	if _, ok := urlStorage[url]; ok {
+		res.WriteHeader(http.StatusBadRequest)
+		return
 	}
 	shortURL := getShortURL()
 	urlStorage[shortURL] = url
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(fmt.Sprintf("%s/%s", baseReturnURL, shortURL)))
+	res.Write([]byte(fmt.Sprintf("%s/%s", "http://localhost:8080", shortURL)))
 }
 
 func getShortURL() string {
-	return "url" + strconv.Itoa(len(urlStorage)+1)
+	rand.Seed(time.Now().UnixNano())
+	b := make([]byte, 8+2)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)[2:8]
 }
 
 func main() {
-	parseFlags()
+	cfg := config.InitConfig()
+
+	store := storage.InitStorage()
+	_ = store
 	r := chi.NewRouter()
 	r.Post("/", createShortLink)
 	r.Get("/{id}", redirectToLink)
-	urlStorage["url1"] = "https://ya.ru"
 
-	fmt.Println("Running server on", serverAddress)
+	fmt.Println("Running server on", cfg.ServerAddress)
 
-	if err := http.ListenAndServe(serverAddress, r); err != nil {
+	if err := http.ListenAndServe(cfg.ServerAddress, r); err != nil {
 		panic(err)
 	}
 }
