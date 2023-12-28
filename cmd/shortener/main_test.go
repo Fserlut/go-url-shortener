@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/Fserlut/go-url-shortener/internal/config"
+	"github.com/Fserlut/go-url-shortener/internal/handlers"
+	"github.com/Fserlut/go-url-shortener/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"io"
 	"net/http"
@@ -49,6 +52,11 @@ func TestHandlers(t *testing.T) {
 			},
 		},
 	}
+	cfg := config.InitConfig()
+
+	store := storage.InitStorage()
+
+	h := handlers.InitHandlers(store, cfg)
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var bodyReader io.Reader
@@ -62,9 +70,9 @@ func TestHandlers(t *testing.T) {
 			// создаём новый Recorder
 			w := httptest.NewRecorder()
 			if test.request.method == http.MethodGet {
-				redirectToLink(w, request)
+				h.RedirectToLink(w, request)
 			} else {
-				createShortLink(w, request)
+				h.CreateShortUrl(w, request)
 			}
 
 			res := w.Result()
