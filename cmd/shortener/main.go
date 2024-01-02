@@ -26,7 +26,8 @@ func main() {
 
 	r.Use(handlers.WithLogging)
 
-	r.Post("/api/shorten", h.CreateShortURL)
+	r.Post("/api/shorten", h.APICreateShortURL)
+	r.Post("/", h.CreateShortURL)
 	r.Get("/{id}", h.RedirectToLink)
 
 	logger.Log.Info("Running server", zap.String("address", cfg.ServerAddress))

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Fserlut/go-url-shortener/internal/logger"
 	"go.uber.org/zap"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -26,7 +27,26 @@ type CreateShortURLResponse struct {
 	Result string `json:"result"`
 }
 
-func (h *Handlers) CreateShortURL(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	url := string(body)
+	if len(url) == 0 {
+		res.WriteHeader(http.StatusBadRequest)
+	}
+	if _, ok := h.store.URLStorage[url]; ok {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	shortURL := h.store.AddURL(url)
+	res.WriteHeader(http.StatusCreated)
+	res.Write([]byte(fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, shortURL)))
+}
+
+func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	var req CreateShortURLRequest
 
