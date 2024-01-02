@@ -3,7 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"io"
+	"github.com/Fserlut/go-url-shortener/internal/logger"
+	"go.uber.org/zap"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -25,37 +26,38 @@ type CreateShortURLResponse struct {
 	Result string `json:"result"`
 }
 
-func (h *Handlers) CreateShortURI(w http.ResponseWriter, r *http.Request) {
-	// десериализуем запрос в структуру модели
-	//logger.Log.Debug("decoding request")
+func (h *Handlers) CreateShortURL(w http.ResponseWriter, r *http.Request) {
+	logger.Log.Debug("decoding request")
 	var req CreateShortURLRequest
-	dec := json.NewDecoder(r.Body)
-	if err := dec.Decode(&req); err != nil {
-		//logger.Log.Debug("cannot decode request JSON body", zap.Error(err))
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-}
 
-func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
-	//body := CreateShortURLRequest{}
-	//json.Unmarshal(req.Body, body)
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		res.WriteHeader(http.StatusBadRequest)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		logger.Log.Debug("cannot decode request JSON body", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	url := string(body)
-	if len(url) == 0 {
-		res.WriteHeader(http.StatusBadRequest)
-	}
-	if _, ok := h.store.URLStorage[url]; ok {
-		res.WriteHeader(http.StatusBadRequest)
+
+	if url := req.URL; url == "" {
+		logger.Log.Error("cannot decode request JSON body")
+		http.Error(w, "URL cant be empty", http.StatusBadRequest)
 		return
 	}
-	shortURL := h.store.AddURL(url)
-	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, shortURL)))
+
+	result := fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, h.store.AddURL(req.URL))
+
+	// заполняем модель ответа
+	resp := CreateShortURLResponse{
+		Result: result,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	// сериализуем ответ сервера
+	enc := json.NewEncoder(w)
+	if err := enc.Encode(resp); err != nil {
+		logger.Log.Debug("error encoding response", zap.Error(err))
+		return
+	}
+	logger.Log.Debug("sending HTTP 200 response")
 }
 
 func (h *Handlers) RedirectToLink(res http.ResponseWriter, req *http.Request) {
