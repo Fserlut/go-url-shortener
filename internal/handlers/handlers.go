@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,7 +17,29 @@ type Handlers struct {
 	cfg   *config.Config
 }
 
+type CreateShortURLRequest struct {
+	URL string `json:"url"`
+}
+
+type CreateShortURLResponse struct {
+	Result string `json:"result"`
+}
+
+func (h *Handlers) CreateShortURI(w http.ResponseWriter, r *http.Request) {
+	// десериализуем запрос в структуру модели
+	//logger.Log.Debug("decoding request")
+	var req CreateShortURLRequest
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(&req); err != nil {
+		//logger.Log.Debug("cannot decode request JSON body", zap.Error(err))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
+	//body := CreateShortURLRequest{}
+	//json.Unmarshal(req.Body, body)
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)

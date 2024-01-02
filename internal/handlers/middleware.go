@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"github.com/Fserlut/go-url-shortener/internal/logger"
 	"go.uber.org/zap"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -29,7 +31,7 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
 	r.responseData.status = statusCode
 }
 
-func WithLogging(logger *zap.SugaredLogger, h http.Handler) http.Handler {
+func WithLogging(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		start := time.Now()
@@ -46,10 +48,13 @@ func WithLogging(logger *zap.SugaredLogger, h http.Handler) http.Handler {
 
 		duration := time.Since(start)
 
-		logger.Infoln("uri", r.RequestURI,
-			"method", r.Method,
-			"status", responseData.status,
-			"duration", duration,
-			"size", responseData.size)
+		logger.Log.Info(
+			"",
+			zap.String("uri", r.RequestURI),
+			zap.String("method", r.Method),
+			zap.String("status", strconv.FormatInt(int64(responseData.status), 10)),
+			zap.String("duration", strconv.Itoa(int(duration))),
+			zap.String("size", strconv.Itoa(responseData.size)),
+		)
 	})
 }
