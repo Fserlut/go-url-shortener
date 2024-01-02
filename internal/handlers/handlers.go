@@ -70,6 +70,7 @@ func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
 
 	// сериализуем ответ сервера
 	enc := json.NewEncoder(w)
@@ -77,7 +78,7 @@ func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {
 		logger.Log.Debug("error encoding response", zap.Error(err))
 		return
 	}
-	logger.Log.Debug("sending HTTP 200 response")
+	logger.Log.Debug("sending HTTP 201 response")
 }
 
 func (h *Handlers) RedirectToLink(res http.ResponseWriter, req *http.Request) {
