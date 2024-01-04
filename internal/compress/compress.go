@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 )
 
@@ -78,7 +79,8 @@ func GzipMiddleware(h http.Handler) http.Handler {
 		ow := w
 
 		contentType := r.Header.Get("Content-Type")
-		if strings.Contains(contentType, "application/json") || strings.Contains(contentType, "text/html") {
+		acceptedType := []string{"application/json", "text/html"}
+		if slices.Contains(acceptedType, contentType) {
 			// проверяем, что клиент умеет получать от сервера сжатые данные в формате gzip
 			acceptEncoding := r.Header.Get("Accept-Encoding")
 			supportsGzip := strings.Contains(acceptEncoding, "gzip")
