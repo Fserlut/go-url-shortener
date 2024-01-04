@@ -20,7 +20,7 @@ func main() {
 		panic(err)
 	}
 
-	store := storage.InitStorage()
+	store := storage.InitStorage(cfg)
 
 	h := handlers.InitHandlers(store, cfg)
 	r := chi.NewRouter()
