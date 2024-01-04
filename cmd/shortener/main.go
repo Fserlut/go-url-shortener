@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/Fserlut/go-url-shortener/internal/compress"
 	"go.uber.org/zap"
 	"net/http"
 
@@ -25,6 +26,8 @@ func main() {
 	r := chi.NewRouter()
 
 	r.Use(handlers.WithLogging)
+
+	r.Use(compress.GzipMiddleware)
 
 	r.Post("/api/shorten", h.APICreateShortURL)
 	r.Post("/", h.CreateShortURL)
