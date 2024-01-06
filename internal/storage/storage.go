@@ -18,7 +18,7 @@ type Storage struct {
 }
 
 type URLJson struct {
-	Uuid        string `json:"uuid"`
+	UUID        string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 }
@@ -28,7 +28,7 @@ func (s *Storage) AddURL(url string) string {
 	s.URLStorage[shortURL] = url
 
 	urlToSave := URLJson{
-		Uuid:        strconv.Itoa(len(s.URLStorage)),
+		UUID:        strconv.Itoa(len(s.URLStorage)),
 		OriginalURL: url,
 		ShortURL:    shortURL,
 	}
