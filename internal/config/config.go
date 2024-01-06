@@ -38,7 +38,7 @@ func InitConfig() *Config {
 		cfg.LogLevel = envLogLevel
 	}
 
-	if envFileStoragePath := os.Getenv("FILES_STORAGE_PATH"); envFileStoragePath != "" {
+	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
 		cfg.FileStoragePath = envFileStoragePath
 	}
 
