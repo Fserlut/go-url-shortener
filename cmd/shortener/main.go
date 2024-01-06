@@ -22,6 +22,8 @@ func main() {
 
 	store := storage.InitStorage(cfg)
 
+	defer store.File.Close()
+
 	h := handlers.InitHandlers(store, cfg)
 	r := chi.NewRouter()
 

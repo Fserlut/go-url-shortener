@@ -1,8 +1,9 @@
 package storage
 
 import (
+	"bufio"
 	"encoding/json"
-	"fmt"
+	"io"
 	"os"
 	"strconv"
 
@@ -13,46 +14,86 @@ import (
 type Storage struct {
 	URLStorage map[string]string
 	cfg        *config.Config
-	file       *os.File
+	File       *os.File
 }
 
 type URLJson struct {
 	Uuid        string `json:"uuid"`
-	ShortUrl    string `json:"short_url"`
-	OriginalUrl string `json:"original_url"`
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
 }
 
 func (s *Storage) AddURL(url string) string {
 	shortURL := random.GetShortURL()
 	s.URLStorage[shortURL] = url
+
 	urlToSave := URLJson{
 		Uuid:        strconv.Itoa(len(s.URLStorage)),
-		OriginalUrl: url,
-		ShortUrl:    shortURL,
+		OriginalURL: url,
+		ShortURL:    shortURL,
 	}
-	fmt.Println(urlToSave)
-	data, err := json.MarshalIndent(urlToSave, "", "\n")
+
+	data, err := json.Marshal(urlToSave)
 
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println(data)
+	_, err = s.File.Write(append(data, '\n'))
 
-	fileWriteErr := os.WriteFile(s.cfg.FileStoragePath, data, 0666)
-
-	if fileWriteErr != nil {
-		panic(fileWriteErr)
+	if err != nil {
+		panic(err)
 	}
 
 	return shortURL
 }
 
+func initOldURLs(file *os.File) map[string]string {
+	reader := bufio.NewReader(file)
+
+	data, err := reader.ReadBytes('\n')
+
+	URLSFromFile := make(map[string]string)
+
+	for {
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			panic(err)
+		}
+
+		itemURL := URLJson{}
+
+		unMarshalErr := json.Unmarshal(data, &itemURL)
+
+		if unMarshalErr != nil {
+			panic(unMarshalErr)
+		}
+
+		URLSFromFile[itemURL.ShortURL] = itemURL.OriginalURL
+
+		data, err = reader.ReadBytes('\n')
+	}
+
+	return URLSFromFile
+}
+
 func InitStorage(cfg *config.Config) *Storage {
-	fmt.Println(cfg.FileStoragePath)
+	dir, _ := os.Getwd()
+
+	file, err := os.OpenFile(dir+cfg.FileStoragePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+
+	if err != nil {
+		panic(err)
+	}
+
+	URLStorage := initOldURLs(file)
 
 	return &Storage{
-		URLStorage: make(map[string]string),
+		URLStorage: URLStorage,
 		cfg:        cfg,
+		File:       file,
 	}
 }
