@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -13,6 +14,19 @@ import (
 	"github.com/Fserlut/go-url-shortener/internal/config"
 	"github.com/Fserlut/go-url-shortener/internal/storage"
 )
+
+var cfg *config.Config
+var store *storage.Storage
+
+func TestMain(m *testing.M) {
+	cfg = config.InitConfig()        // Инициализация конфигурации
+	store = storage.InitStorage(cfg) // Инициализация хранилища
+
+	// Закрываем файл после завершения всех тестов
+	defer store.File.Close()
+
+	os.Exit(m.Run()) // Запускаем все тесты
+}
 
 func TestHandlers_APICreateShortURL(t *testing.T) {
 	type want struct {
@@ -51,11 +65,7 @@ func TestHandlers_APICreateShortURL(t *testing.T) {
 		},
 	}
 
-	cfg := config.InitConfig()
-
-	store := storage.InitStorage(cfg)
-
-	defer store.File.Close()
+	//defer store.File.Close()
 
 	h := &Handlers{
 		cfg:   cfg,
@@ -108,12 +118,6 @@ func TestHandlers_CreateShortURL(t *testing.T) {
 			},
 		},
 	}
-
-	cfg := config.InitConfig()
-
-	store := storage.InitStorage(cfg)
-
-	defer store.File.Close()
 
 	h := &Handlers{
 		cfg:   cfg,
