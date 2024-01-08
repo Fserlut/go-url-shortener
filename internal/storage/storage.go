@@ -49,11 +49,15 @@ func (s *Storage) AddURL(url string) string {
 }
 
 func initOldURLs(file *os.File) map[string]string {
+	URLSFromFile := make(map[string]string)
+
+	if file == nil {
+		return URLSFromFile
+	}
+
 	reader := bufio.NewReader(file)
 
 	data, err := reader.ReadBytes('\n')
-
-	URLSFromFile := make(map[string]string)
 
 	for {
 		if err == io.EOF {
@@ -81,9 +85,11 @@ func initOldURLs(file *os.File) map[string]string {
 }
 
 func InitStorage(cfg *config.Config) *Storage {
-	dir, _ := os.Getwd()
+	//dir, _ := os.Getwd()
 
-	file, err := os.OpenFile(dir+cfg.FileStoragePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	//file, err := os.OpenFile(dir+cfg.FileStoragePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+
+	file, err := os.OpenFile(cfg.FileStoragePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 
 	if err != nil {
 		panic(err)
