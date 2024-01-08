@@ -56,7 +56,7 @@ func TestHandlers(t *testing.T) {
 	}
 	cfg := config.InitConfig()
 
-	store := storage.InitStorage()
+	store := storage.InitStorage(cfg)
 
 	h := handlers.InitHandlers(store, cfg)
 	for _, test := range tests {
