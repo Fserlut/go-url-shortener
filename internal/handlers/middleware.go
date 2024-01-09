@@ -1,11 +1,13 @@
 package handlers
 
 import (
-	"github.com/Fserlut/go-url-shortener/internal/logger"
-	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 	"time"
+
+	"go.uber.org/zap"
+
+	"github.com/Fserlut/go-url-shortener/internal/logger"
 )
 
 type (

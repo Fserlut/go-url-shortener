@@ -3,14 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Fserlut/go-url-shortener/internal/logger"
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 
 	"github.com/Fserlut/go-url-shortener/internal/config"
+	"github.com/Fserlut/go-url-shortener/internal/logger"
 	"github.com/Fserlut/go-url-shortener/internal/storage"
 )
 

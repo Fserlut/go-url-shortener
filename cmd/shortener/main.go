@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/Fserlut/go-url-shortener/internal/compress"
 	"go.uber.org/zap"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Fserlut/go-url-shortener/internal/compress"
 	"github.com/Fserlut/go-url-shortener/internal/config"
 	"github.com/Fserlut/go-url-shortener/internal/handlers"
 	"github.com/Fserlut/go-url-shortener/internal/logger"
