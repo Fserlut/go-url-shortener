@@ -6,17 +6,18 @@ import (
 )
 
 type Config struct {
-	ServerAddress string
-	BaseReturnURL string
+	ServerAddress   string
+	BaseReturnURL   string
+	LogLevel        string
+	FileStoragePath string
 }
 
 func InitConfig() *Config {
-	cfg := Config{
-		ServerAddress: ":8080",
-		BaseReturnURL: "http://localhost:8080",
-	}
-	flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, "address and port to run server")
-	flag.StringVar(&cfg.BaseReturnURL, "b", cfg.BaseReturnURL, "address return url")
+	cfg := &Config{}
+	flag.StringVar(&cfg.ServerAddress, "a", ":8080", "address and port to run server")
+	flag.StringVar(&cfg.BaseReturnURL, "b", "http://localhost:8080", "address return url")
+	flag.StringVar(&cfg.LogLevel, "l", "info", "logger level")
+	flag.StringVar(&cfg.FileStoragePath, "f", "/tmp/short-url-db.json", "file to save urls")
 
 	flag.Parse()
 
@@ -28,5 +29,13 @@ func InitConfig() *Config {
 		cfg.BaseReturnURL = envBaseURL
 	}
 
-	return &cfg
+	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
+		cfg.LogLevel = envLogLevel
+	}
+
+	if envFileStoragePath := os.Getenv("FILE_STORAGE_PATH"); envFileStoragePath != "" {
+		cfg.FileStoragePath = envFileStoragePath
+	}
+
+	return cfg
 }
