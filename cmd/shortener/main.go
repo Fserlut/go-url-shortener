@@ -20,7 +20,7 @@ func main() {
 		panic(err)
 	}
 
-	store := storage.InitStorage(cfg)
+	store, _ := storage.InitStorage(cfg)
 
 	defer store.File.Close()
 

@@ -84,15 +84,11 @@ func initOldURLs(file *os.File) map[string]string {
 	return URLSFromFile
 }
 
-func InitStorage(cfg *config.Config) *Storage {
-	//dir, _ := os.Getwd()
-
-	//file, err := os.OpenFile(dir+cfg.FileStoragePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-
+func InitStorage(cfg *config.Config) (*Storage, error) {
 	file, err := os.OpenFile(cfg.FileStoragePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	URLStorage := initOldURLs(file)
@@ -101,5 +97,5 @@ func InitStorage(cfg *config.Config) *Storage {
 		URLStorage: URLStorage,
 		cfg:        cfg,
 		File:       file,
-	}
+	}, nil
 }
