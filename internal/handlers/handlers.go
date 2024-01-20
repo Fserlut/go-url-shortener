@@ -107,8 +107,8 @@ func (h *Handlers) RedirectToLink(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
 	http.Redirect(res, req, value.OriginalURL, http.StatusTemporaryRedirect)
-	return
 }
 
 func (h *Handlers) PingHandler(res http.ResponseWriter, req *http.Request) {
@@ -116,6 +116,7 @@ func (h *Handlers) PingHandler(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	res.WriteHeader(http.StatusOK)
 }
 
