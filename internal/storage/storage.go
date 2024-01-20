@@ -11,6 +11,7 @@ type URLData struct {
 type Storage interface {
 	SaveURL(data URLData) (*URLData, error)
 	GetShortURL(key string) (*URLData, error)
+	Ping() error
 }
 
 func NewStorage(cfg *config.Config) Storage {
@@ -19,6 +20,8 @@ func NewStorage(cfg *config.Config) Storage {
 		return newMemoryStorage()
 	case "file":
 		return newFileStorage(cfg.FileStoragePath)
+	case "db":
+		return newDBStorage(cfg.DatabaseDSN)
 	default:
 		return newMemoryStorage()
 	}

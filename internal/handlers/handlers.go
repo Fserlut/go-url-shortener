@@ -111,6 +111,14 @@ func (h *Handlers) RedirectToLink(res http.ResponseWriter, req *http.Request) {
 	return
 }
 
+func (h *Handlers) PingHandler(res http.ResponseWriter, req *http.Request) {
+	if err := h.store.Ping(); err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	res.WriteHeader(http.StatusOK)
+}
+
 func InitHandlers(store storage.Storage, cfg *config.Config) *Handlers {
 	return &Handlers{
 		cfg:   cfg,

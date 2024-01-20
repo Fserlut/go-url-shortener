@@ -107,3 +107,7 @@ func (fs *FileStorage) GetShortURL(key string) (*URLData, error) {
 
 	return data, nil
 }
+
+func (fs *FileStorage) Ping() error {
+	return nil
+}

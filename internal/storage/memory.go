@@ -14,6 +14,10 @@ func newMemoryStorage() *MemoryStorage {
 	}
 }
 
+func (s *MemoryStorage) Ping() error {
+	return nil
+}
+
 func (s *MemoryStorage) SaveURL(data URLData) (*URLData, error) {
 	s.storageURL[data.ShortURL] = data
 	return &data, nil
