@@ -7,15 +7,17 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"github.com/Fserlut/go-url-shortener/internal/config"
 	"github.com/Fserlut/go-url-shortener/internal/logger"
 	"github.com/Fserlut/go-url-shortener/internal/storage"
+	random "github.com/Fserlut/go-url-shortener/internal/utils"
 )
 
 type Handlers struct {
-	store *storage.Storage
+	store storage.Storage
 	cfg   *config.Config
 }
 
@@ -36,14 +38,21 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 	url := string(body)
 	if len(url) == 0 {
 		res.WriteHeader(http.StatusBadRequest)
-	}
-	if _, ok := h.store.URLStorage[url]; ok {
-		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	shortURL := h.store.AddURL(url)
+
+	data, err := h.store.SaveURL(storage.URLData{
+		OriginalURL: url,
+		UUID:        uuid.New().String(),
+		ShortURL:    random.GetShortURL(),
+	})
+
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	res.WriteHeader(http.StatusCreated)
-	res.Write([]byte(fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, shortURL)))
+	res.Write([]byte(fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, data.ShortURL)))
 }
 
 func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +71,18 @@ func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result := fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, h.store.AddURL(req.URL))
+	data, err := h.store.SaveURL(storage.URLData{
+		OriginalURL: req.URL,
+		UUID:        uuid.New().String(),
+		ShortURL:    random.GetShortURL(),
+	})
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	result := fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, data.ShortURL)
 
 	// заполняем модель ответа
 	resp := CreateShortURLResponse{
@@ -82,14 +102,16 @@ func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) RedirectToLink(res http.ResponseWriter, req *http.Request) {
-	if value, ok := h.store.URLStorage[chi.URLParam(req, "id")]; ok {
-		http.Redirect(res, req, value, http.StatusTemporaryRedirect)
+	value, err := h.store.GetShortURL(chi.URLParam(req, "id"))
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	res.WriteHeader(http.StatusBadRequest)
+	http.Redirect(res, req, value.OriginalURL, http.StatusTemporaryRedirect)
+	return
 }
 
-func InitHandlers(store *storage.Storage, cfg *config.Config) *Handlers {
+func InitHandlers(store storage.Storage, cfg *config.Config) *Handlers {
 	return &Handlers{
 		cfg:   cfg,
 		store: store,

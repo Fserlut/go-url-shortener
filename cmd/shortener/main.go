@@ -1,10 +1,10 @@
 package main
 
 import (
-	"go.uber.org/zap"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 
 	"github.com/Fserlut/go-url-shortener/internal/compress"
 	"github.com/Fserlut/go-url-shortener/internal/config"
@@ -20,9 +20,7 @@ func main() {
 		panic(err)
 	}
 
-	store, _ := storage.InitStorage(cfg)
-
-	defer store.File.Close()
+	store := storage.NewStorage(cfg)
 
 	h := handlers.InitHandlers(store, cfg)
 	r := chi.NewRouter()
