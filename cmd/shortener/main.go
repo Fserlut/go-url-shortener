@@ -32,6 +32,7 @@ func main() {
 	r.Post("/api/shorten", h.APICreateShortURL)
 	r.Post("/", h.CreateShortURL)
 	r.Get("/{id}", h.RedirectToLink)
+	r.Get("/ping", h.PingHandler)
 
 	logger.Log.Info("Running server", zap.String("address", cfg.ServerAddress))
 
