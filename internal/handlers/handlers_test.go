@@ -16,14 +16,11 @@ import (
 )
 
 var cfg *config.Config
-var store *storage.Storage
+var store storage.Storage
 
 func TestMain(m *testing.M) {
-	cfg = config.InitConfig()           // Инициализация конфигурации
-	store, _ = storage.InitStorage(cfg) // Инициализация хранилища
-
-	// Закрываем файл после завершения всех тестов
-	defer store.File.Close()
+	cfg = config.InitConfig()       // Инициализация конфигурации
+	store = storage.NewStorage(cfg) // Инициализация хранилища
 
 	os.Exit(m.Run()) // Запускаем все тесты
 }
