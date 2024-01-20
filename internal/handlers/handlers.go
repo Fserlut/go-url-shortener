@@ -102,7 +102,8 @@ func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) RedirectToLink(res http.ResponseWriter, req *http.Request) {
-	value, err := h.store.GetShortURL(chi.URLParam(req, "id"))
+	key := chi.URLParam(req, "id")
+	value, err := h.store.GetShortURL(key)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		return

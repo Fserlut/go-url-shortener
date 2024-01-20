@@ -3,23 +3,23 @@ package storage
 import (
 	"bufio"
 	"encoding/json"
-	"io"
+	"fmt"
 	"os"
 )
 
 type FileStorage struct {
-	inMemoryData *MemoryStorage
-	filePath     string
+	memoryStorage *MemoryStorage
+	filePath      string
 }
 
 func newFileStorage(filePath string) *FileStorage {
-	inMemoryData := newMemoryStorage()
+	memoryStorage := newMemoryStorage()
 	fs := FileStorage{
-		inMemoryData: inMemoryData,
-		filePath:     filePath,
+		memoryStorage: memoryStorage,
+		filePath:      filePath,
 	}
 
-	err := readFromFile(&fs)
+	err := readFromFile(fs)
 	if err != nil {
 		panic(err)
 	}
@@ -27,79 +27,73 @@ func newFileStorage(filePath string) *FileStorage {
 	return &fs
 }
 
-func readFromFile(fs *FileStorage) error {
-	file, err := os.OpenFile(fs.filePath, os.O_RDWR|os.O_CREATE, 0644)
-
+func readFromFile(fs FileStorage) error {
+	file, err := os.OpenFile(fs.filePath, os.O_RDONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
-
 	defer file.Close()
 
-	reader := bufio.NewReader(file)
+	scanner := bufio.NewScanner(file)
 
-	data, err := reader.ReadBytes('\n')
+	for scanner.Scan() {
+		line := scanner.Bytes()
 
-	for {
-		if err == io.EOF {
-			break
+		var sd URLData
+		if err := json.Unmarshal(line, &sd); err != nil {
+			return err
 		}
 
+		_, err := fs.memoryStorage.SaveURL(sd)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (fs *FileStorage) Save() error {
+	file, err := os.OpenFile(fs.filePath, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	writer := bufio.NewWriter(file)
+	for _, v := range fs.memoryStorage.storageURL {
+		line, err := json.Marshal(v)
 		if err != nil {
 			return err
 		}
 
-		itemURL := URLData{}
-
-		unMarshalErr := json.Unmarshal(data, &itemURL)
-
-		if unMarshalErr != nil {
-			return unMarshalErr
+		_, err = writer.Write(append(line, '\n'))
+		if err != nil {
+			return err
 		}
-
-		fs.inMemoryData.SaveURL(itemURL)
-
-		data, err = reader.ReadBytes('\n')
 	}
-	return nil
-}
-
-func (fs *FileStorage) Save(data URLData) error {
-	file, err := os.OpenFile(fs.filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
-
+	err = writer.Flush()
 	if err != nil {
 		return err
 	}
-
-	defer file.Close()
-
-	dataToWrite, err := json.Marshal(data)
-
-	if err != nil {
-		return err
-	}
-
-	_, err = file.Write(append(dataToWrite, '\n'))
-
-	if err != nil {
-		panic(err)
-	}
-
 	return nil
 }
 
 func (fs *FileStorage) SaveURL(data URLData) (*URLData, error) {
-	err := fs.Save(data)
-
+	fs.memoryStorage.SaveURL(data)
+	err := fs.Save()
 	if err != nil {
 		return nil, err
 	}
-
 	return &data, nil
 }
 
 func (fs *FileStorage) GetShortURL(key string) (*URLData, error) {
-	data, err := fs.inMemoryData.GetShortURL(key)
+	data, err := fs.memoryStorage.GetShortURL(key)
+
+	fmt.Println(data)
 
 	if err != nil {
 		return nil, err
