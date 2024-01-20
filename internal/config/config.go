@@ -20,7 +20,7 @@ func InitConfig() *Config {
 	flag.StringVar(&cfg.BaseReturnURL, "b", "http://localhost:8080", "address return url")
 	flag.StringVar(&cfg.LogLevel, "l", "info", "logger level")
 	flag.StringVar(&cfg.FileStoragePath, "f", "/tmp/short-url-db.json", "file to save urls")
-	flag.StringVar(&cfg.StorageType, "s", "memory", "storage to use (memory/file/db)")
+	flag.StringVar(&cfg.StorageType, "s", "file", "storage to use (memory/file/db)")
 	flag.StringVar(&cfg.DatabaseDSN, "d", "", "Database dsn")
 
 	flag.Parse()

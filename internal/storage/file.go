@@ -28,7 +28,7 @@ func newFileStorage(filePath string) *FileStorage {
 }
 
 func readFromFile(fs *FileStorage) error {
-	file, err := os.OpenFile(fs.filePath, os.O_RDWR|os.O_CREATE, 0666)
+	file, err := os.OpenFile(fs.filePath, os.O_RDWR|os.O_CREATE, 0644)
 
 	if err != nil {
 		return err
