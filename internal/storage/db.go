@@ -2,9 +2,10 @@ package storage
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 
-	"database/sql"
+	_ "github.com/lib/pq"
 )
 
 type DatabaseStorage struct {
