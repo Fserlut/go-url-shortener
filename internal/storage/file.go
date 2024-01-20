@@ -99,7 +99,7 @@ func (fs *FileStorage) SaveURL(data URLData) (*URLData, error) {
 }
 
 func (fs *FileStorage) GetShortURL(key string) (*URLData, error) {
-	data, err := fs.GetShortURL(key)
+	data, err := fs.inMemoryData.GetShortURL(key)
 
 	if err != nil {
 		return nil, err
