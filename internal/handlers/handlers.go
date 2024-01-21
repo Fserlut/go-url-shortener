@@ -29,6 +29,16 @@ type CreateShortURLResponse struct {
 	Result string `json:"result"`
 }
 
+type CreateBatchShortenRequestItem struct {
+	CorrelationID string `json:"correlation_id"`
+	OriginalURL   string `json:"original_url"`
+}
+
+type CreateBatchShortenResponseItem struct {
+	CorrelationID string `json:"correlation_id"`
+	ShortURL      string `json:"short_url"`
+}
+
 func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -53,6 +63,51 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 	}
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte(fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, data.ShortURL)))
+}
+
+func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
+	var reqURLs []CreateBatchShortenRequestItem
+
+	err := json.NewDecoder(r.Body).Decode(&reqURLs)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	res := make([]CreateBatchShortenResponseItem, 0, len(reqURLs))
+
+	for _, reqItem := range reqURLs {
+		shortData, err := h.store.SaveURL(storage.URLData{
+			UUID:        uuid.New().String(),
+			OriginalURL: reqItem.OriginalURL,
+			ShortURL:    random.GetShortURL(),
+		})
+
+		if err != nil {
+			logger.Log.Error("Error on save link: " + reqItem.OriginalURL)
+			continue
+		}
+
+		res = append(res, CreateBatchShortenResponseItem{
+			CorrelationID: reqItem.CorrelationID,
+			ShortURL:      fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, shortData.ShortURL),
+		})
+	}
+
+	resJson, err := json.Marshal(res)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	_, err = w.Write(resJson)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {

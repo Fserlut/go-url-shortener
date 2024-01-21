@@ -36,7 +36,6 @@ func newDBStorage(dsn string) *DatabaseStorage {
 }
 
 func (s *DatabaseStorage) SaveURL(data URLData) (*URLData, error) {
-	fmt.Println("here")
 	_, err := s.db.ExecContext(
 		context.Background(),
 		`INSERT INTO links (uuid, short_url, original_url) VALUES ($1, $2, $3)`, data.UUID, data.ShortURL, data.OriginalURL,

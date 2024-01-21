@@ -30,7 +30,9 @@ func main() {
 	r.Use(compress.GzipMiddleware)
 
 	r.Post("/api/shorten", h.APICreateShortURL)
+	r.Post("/api/shorten/batch", h.CreateBatchURLs)
 	r.Post("/", h.CreateShortURL)
+
 	r.Get("/{id}", h.RedirectToLink)
 	r.Get("/ping", h.PingHandler)
 
