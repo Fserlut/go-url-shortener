@@ -95,7 +95,7 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	resJson, err := json.Marshal(res)
+	resJSON, err := json.Marshal(res)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -103,7 +103,7 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	_, err = w.Write(resJson)
+	_, err = w.Write(resJSON)
 	if err != nil {
 		http.Error(w, "Failed to write response", http.StatusInternalServerError)
 		return
