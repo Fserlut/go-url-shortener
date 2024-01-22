@@ -138,25 +138,18 @@ func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shortURI := random.GetShortURL()
+	data, err := h.store.SaveURL(storage.URLData{
+		OriginalURL: req.URL,
+		UUID:        uuid.New().String(),
+		ShortURL:    random.GetShortURL(),
+	})
 
 	// заполняем модель ответа
 	resp := CreateShortURLResponse{
-		Result: fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, shortURI),
+		Result: fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, data.ShortURL),
 	}
 
-	respJSON, err := json.Marshal(resp)
-
-	if err != nil {
-		http.Error(w, "Marshaling response failed", http.StatusInternalServerError)
-		return
-	}
-
-	_, err = h.store.SaveURL(storage.URLData{
-		OriginalURL: req.URL,
-		UUID:        uuid.New().String(),
-		ShortURL:    shortURI,
-	})
+	respJSON, _ := json.Marshal(resp)
 
 	if err != nil {
 		if errors.Is(err, &storage.ErrURLExists{}) {
