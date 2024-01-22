@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -42,11 +43,13 @@ type CreateBatchShortenResponseItem struct {
 func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
+		res.Header().Set("content-type", "application/json")
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	url := string(body)
 	if len(url) == 0 {
+		res.Header().Set("content-type", "application/json")
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -58,6 +61,12 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 	})
 
 	if err != nil {
+		if errors.Is(err, &storage.ErrURLExists{}) {
+			res.Header().Set("content-type", "application/json")
+			res.WriteHeader(http.StatusConflict)
+			return
+		}
+		res.Header().Set("content-type", "application/json")
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -71,6 +80,7 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&reqURLs)
 
 	if err != nil {
+		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -98,6 +108,7 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 	resJSON, err := json.Marshal(res)
 
 	if err != nil {
+		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -105,6 +116,7 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	_, err = w.Write(resJSON)
 	if err != nil {
+		w.Header().Set("content-type", "application/json")
 		http.Error(w, "Failed to write response", http.StatusInternalServerError)
 		return
 	}
@@ -133,6 +145,12 @@ func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
+		if errors.Is(err, &storage.ErrURLExists{}) {
+			w.Header().Set("content-type", "application/json")
+			http.Error(w, "This URL already exists", http.StatusConflict)
+			return
+		}
+		w.Header().Set("content-type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

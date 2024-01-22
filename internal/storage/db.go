@@ -8,6 +8,12 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type ErrURLExists struct{}
+
+func (e *ErrURLExists) Error() string {
+	return "This URL already exists"
+}
+
 type DatabaseStorage struct {
 	db *sql.DB
 }
@@ -24,9 +30,13 @@ func newDBStorage(dsn string) *DatabaseStorage {
         short_url TEXT NOT NULL UNIQUE,
         original_url TEXT NOT NULL
     );
+
+		CREATE UNIQUE INDEX  IF NOT EXISTS links_original_url_uniq_index
+		    on links (original_url);
 	`)
 
 	if err != nil {
+		fmt.Println(err)
 		panic(err)
 	}
 
@@ -36,10 +46,21 @@ func newDBStorage(dsn string) *DatabaseStorage {
 }
 
 func (s *DatabaseStorage) SaveURL(data URLData) (*URLData, error) {
-	_, err := s.db.ExecContext(
+	res, err := s.db.ExecContext(
 		context.Background(),
-		`INSERT INTO links (uuid, short_url, original_url) VALUES ($1, $2, $3)`, data.UUID, data.ShortURL, data.OriginalURL,
+		`INSERT INTO links (uuid, short_url, original_url) VALUES ($1, $2, $3) ON CONFLICT (original_url) DO NOTHING`, data.UUID, data.ShortURL, data.OriginalURL,
 	)
+
+	fmt.Println(res.RowsAffected())
+	affectedRows, err := res.RowsAffected()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if affectedRows == 0 {
+		return nil, &ErrURLExists{}
+	}
 
 	if err != nil {
 		fmt.Println(err)
