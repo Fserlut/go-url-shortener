@@ -51,6 +51,10 @@ func (s *DatabaseStorage) SaveURL(data URLData) (*URLData, error) {
 		`INSERT INTO links (uuid, short_url, original_url) VALUES ($1, $2, $3) ON CONFLICT (original_url) DO NOTHING`, data.UUID, data.ShortURL, data.OriginalURL,
 	)
 
+	if err != nil {
+		return nil, err
+	}
+
 	affectedRows, err := res.RowsAffected()
 
 	if err != nil {
