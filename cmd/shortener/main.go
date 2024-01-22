@@ -24,10 +24,9 @@ func main() {
 
 	h := handlers.InitHandlers(store, cfg)
 	r := chi.NewRouter()
-
-	r.Use(handlers.WithLogging)
-
+	
 	r.Use(compress.GzipMiddleware)
+	r.Use(handlers.WithLogging)
 
 	r.Post("/api/shorten", h.APICreateShortURL)
 	r.Post("/api/shorten/batch", h.CreateBatchURLs)

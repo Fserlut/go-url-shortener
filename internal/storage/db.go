@@ -62,7 +62,21 @@ func (s *DatabaseStorage) SaveURL(data URLData) (*URLData, error) {
 	}
 
 	if affectedRows == 0 {
-		return nil, &ErrURLExists{}
+		var (
+			uuid        string
+			shortURL    string
+			originalURL string
+		)
+		row := s.db.QueryRowContext(
+			context.Background(),
+			"SELECT uuid, short_url, original_url FROM links WHERE original_url = $1", data.OriginalURL,
+		)
+		err := row.Scan(&uuid, &shortURL, &originalURL)
+
+		if err != nil {
+			return nil, err
+		}
+		return &URLData{UUID: uuid, ShortURL: shortURL, OriginalURL: originalURL}, &ErrURLExists{}
 	}
 
 	return &data, nil
