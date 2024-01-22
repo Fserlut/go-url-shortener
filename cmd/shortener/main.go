@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -24,7 +25,14 @@ func main() {
 
 	h := handlers.InitHandlers(store, cfg)
 	r := chi.NewRouter()
-	
+
+	r.Use(middleware.Compress(5,
+		"application/javascript",
+		"application/json",
+		"text/css",
+		"text/html",
+		"text/plain",
+		"text/xml"))
 	r.Use(compress.GzipMiddleware)
 	r.Use(handlers.WithLogging)
 
