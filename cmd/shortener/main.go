@@ -1,10 +1,10 @@
 package main
 
 import (
-	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"go.uber.org/zap"
 
 	"github.com/Fserlut/go-url-shortener/internal/compress"
