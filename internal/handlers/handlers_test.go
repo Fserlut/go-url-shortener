@@ -75,7 +75,7 @@ func TestHandlers_APICreateShortURL(t *testing.T) {
 			request := httptest.NewRequest(test.requestMethod, test.path, bytes.NewBuffer(body))
 			request.Header.Set("Content-Type", test.contentType)
 			w := httptest.NewRecorder()
-			h.APICreateShortURL(w, request)
+			h.CreateShortURLAPI(w, request)
 
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)
