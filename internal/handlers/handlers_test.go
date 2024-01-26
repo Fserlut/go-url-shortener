@@ -16,14 +16,11 @@ import (
 )
 
 var cfg *config.Config
-var store *storage.Storage
+var store storage.Storage
 
 func TestMain(m *testing.M) {
-	cfg = config.InitConfig()           // Инициализация конфигурации
-	store, _ = storage.InitStorage(cfg) // Инициализация хранилища
-
-	// Закрываем файл после завершения всех тестов
-	defer store.File.Close()
+	cfg = config.InitConfig()       // Инициализация конфигурации
+	store = storage.NewStorage(cfg) // Инициализация хранилища
 
 	os.Exit(m.Run()) // Запускаем все тесты
 }
@@ -78,7 +75,7 @@ func TestHandlers_APICreateShortURL(t *testing.T) {
 			request := httptest.NewRequest(test.requestMethod, test.path, bytes.NewBuffer(body))
 			request.Header.Set("Content-Type", test.contentType)
 			w := httptest.NewRecorder()
-			h.APICreateShortURL(w, request)
+			h.CreateShortURLAPI(w, request)
 
 			res := w.Result()
 			assert.Equal(t, test.want.code, res.StatusCode)

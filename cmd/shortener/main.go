@@ -1,10 +1,11 @@
 package main
 
 import (
-	"go.uber.org/zap"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
 
 	"github.com/Fserlut/go-url-shortener/internal/compress"
 	"github.com/Fserlut/go-url-shortener/internal/config"
@@ -20,20 +21,27 @@ func main() {
 		panic(err)
 	}
 
-	store, _ := storage.InitStorage(cfg)
-
-	defer store.File.Close()
+	store := storage.NewStorage(cfg)
 
 	h := handlers.InitHandlers(store, cfg)
 	r := chi.NewRouter()
 
+	r.Use(middleware.Compress(5,
+		"application/javascript",
+		"application/json",
+		"text/css",
+		"text/html",
+		"text/plain",
+		"text/xml"))
+	r.Use(compress.GzipMiddleware)
 	r.Use(handlers.WithLogging)
 
-	r.Use(compress.GzipMiddleware)
-
-	r.Post("/api/shorten", h.APICreateShortURL)
+	r.Post("/api/shorten", h.CreateShortURLAPI)
+	r.Post("/api/shorten/batch", h.CreateBatchURLs)
 	r.Post("/", h.CreateShortURL)
+
 	r.Get("/{id}", h.RedirectToLink)
+	r.Get("/ping", h.PingHandler)
 
 	logger.Log.Info("Running server", zap.String("address", cfg.ServerAddress))
 

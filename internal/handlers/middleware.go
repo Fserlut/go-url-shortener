@@ -57,6 +57,7 @@ func WithLogging(h http.Handler) http.Handler {
 			zap.String("status", strconv.FormatInt(int64(responseData.status), 10)),
 			zap.String("duration", strconv.Itoa(int(duration))),
 			zap.String("size", strconv.Itoa(responseData.size)),
+			zap.String("contentType", w.Header().Get("Content-Type")),
 		)
 	})
 }
