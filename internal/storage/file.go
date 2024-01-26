@@ -21,7 +21,7 @@ func newFileStorage(filePath string) *FileStorage {
 
 	err := readFromFile(fs)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	return &fs

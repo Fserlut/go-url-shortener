@@ -122,7 +122,7 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handlers) APICreateShortURL(w http.ResponseWriter, r *http.Request) {
+func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
 	logger.Log.Debug("decoding request")
 	var req CreateShortURLRequest
 
