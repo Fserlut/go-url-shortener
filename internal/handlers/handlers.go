@@ -235,11 +235,13 @@ func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
 	URLs, err := h.store.GetURLsByUserID(userID)
 
 	if err != nil {
+		res.Header().Set("Content-Type", "application/json")
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(URLs) < 1 {
+		res.Header().Set("Content-Type", "application/json")
 		res.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -254,6 +256,8 @@ func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
 
 	response, err := json.Marshal(result)
 	if err != nil {
+		res.Header().Set("Content-Type", "application/json")
+		http.Error(res, "Failed to write response", http.StatusInternalServerError)
 		return
 	}
 	res.Header().Set("Content-Type", "application/json")
