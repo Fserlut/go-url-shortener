@@ -50,7 +50,7 @@ func newDBStorage(dsn string) *DatabaseStorage {
 func (s *DatabaseStorage) SaveURL(data URLData) (*URLData, error) {
 	res, err := s.db.ExecContext(
 		context.Background(),
-		`INSERT INTO links (uuid, user_id, short_url, original_url) VALUES ($1, $2, $3, $4) ON CONFLICT (original_url) DO NOTHING`, data.UUID, data.ShortURL, data.OriginalURL, data.UserID,
+		`INSERT INTO links (uuid, user_id, short_url, original_url) VALUES ($1, $2, $3, $4) ON CONFLICT (original_url) DO NOTHING`, data.UUID, data.UserID, data.ShortURL, data.OriginalURL,
 	)
 
 	if err != nil {

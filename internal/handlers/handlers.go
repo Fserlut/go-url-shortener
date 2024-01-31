@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Fserlut/go-url-shortener/internal/auth"
 	"io"
 	"net/http"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"github.com/Fserlut/go-url-shortener/internal/auth"
 	"github.com/Fserlut/go-url-shortener/internal/config"
 	"github.com/Fserlut/go-url-shortener/internal/logger"
 	"github.com/Fserlut/go-url-shortener/internal/storage"
@@ -186,8 +186,6 @@ func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("content-type", "application/json")
 			w.WriteHeader(http.StatusConflict)
 
-			fmt.Println(respJSON)
-
 			_, err = w.Write(respJSON)
 			if err != nil {
 				http.Error(w, "Failed to write response", http.StatusInternalServerError)
@@ -233,8 +231,6 @@ func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-
-	fmt.Println(userID)
 
 	URLs, err := h.store.GetURLsByUserID(userID)
 

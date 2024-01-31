@@ -49,7 +49,7 @@ func GetUserID(w http.ResponseWriter, r *http.Request) (string, error) {
 		return "", fmt.Errorf("token is not valid")
 	}
 
-	fmt.Println("Token os valid")
+	fmt.Println("Token is valid")
 	return claims.UserID, nil
 }
 
