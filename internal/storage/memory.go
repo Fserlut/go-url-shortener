@@ -8,6 +8,11 @@ type MemoryStorage struct {
 	storageURL map[string]URLData
 }
 
+func (s *MemoryStorage) GetURLsByUserID(userID string) ([]URLData, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func newMemoryStorage() *MemoryStorage {
 	return &MemoryStorage{
 		storageURL: make(map[string]URLData),

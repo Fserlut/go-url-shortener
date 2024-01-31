@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Fserlut/go-url-shortener/internal/auth"
 	"io"
 	"net/http"
 
@@ -40,7 +41,19 @@ type CreateBatchShortenResponseItem struct {
 	ShortURL      string `json:"short_url"`
 }
 
+type UserLinksResponseItem struct {
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+}
+
 func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
+	userID, err := auth.GetUserID(res, req)
+
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
@@ -54,6 +67,7 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 
 	data, err := h.store.SaveURL(storage.URLData{
 		OriginalURL: url,
+		UserID:      userID,
 		UUID:        uuid.New().String(),
 		ShortURL:    random.GetShortURL(),
 	})
@@ -77,9 +91,16 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 }
 
 func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserID(w, r)
+
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	var reqURLs []CreateBatchShortenRequestItem
 
-	err := json.NewDecoder(r.Body).Decode(&reqURLs)
+	err = json.NewDecoder(r.Body).Decode(&reqURLs)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -91,6 +112,7 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 	for _, reqItem := range reqURLs {
 		shortData, err := h.store.SaveURL(storage.URLData{
 			UUID:        uuid.New().String(),
+			UserID:      userID,
 			OriginalURL: reqItem.OriginalURL,
 			ShortURL:    random.GetShortURL(),
 		})
@@ -123,6 +145,13 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserID(w, r)
+
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	logger.Log.Debug("decoding request")
 	var req CreateShortURLRequest
 
@@ -140,6 +169,7 @@ func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
 
 	data, err := h.store.SaveURL(storage.URLData{
 		OriginalURL: req.URL,
+		UserID:      userID,
 		UUID:        uuid.New().String(),
 		ShortURL:    random.GetShortURL(),
 	})
@@ -194,6 +224,45 @@ func (h *Handlers) PingHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	res.WriteHeader(http.StatusOK)
+}
+
+func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
+	userID, err := auth.GetUserID(res, req)
+
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	fmt.Println(userID)
+
+	URLs, err := h.store.GetURLsByUserID(userID)
+
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if len(URLs) < 1 {
+		res.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	var result []UserLinksResponseItem
+
+	for _, v := range URLs {
+		shortURL := h.cfg.BaseReturnURL + "/" + v.ShortURL
+		b := &UserLinksResponseItem{shortURL, v.OriginalURL}
+		result = append(result, *b)
+	}
+
+	response, err := json.Marshal(result)
+	if err != nil {
+		return
+	}
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusOK)
+	res.Write(response)
 }
 
 func InitHandlers(store storage.Storage, cfg *config.Config) *Handlers {

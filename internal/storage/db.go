@@ -28,6 +28,7 @@ func newDBStorage(dsn string) *DatabaseStorage {
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS links (
         uuid TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
         short_url TEXT NOT NULL UNIQUE,
         original_url TEXT NOT NULL
     );
@@ -49,7 +50,7 @@ func newDBStorage(dsn string) *DatabaseStorage {
 func (s *DatabaseStorage) SaveURL(data URLData) (*URLData, error) {
 	res, err := s.db.ExecContext(
 		context.Background(),
-		`INSERT INTO links (uuid, short_url, original_url) VALUES ($1, $2, $3) ON CONFLICT (original_url) DO NOTHING`, data.UUID, data.ShortURL, data.OriginalURL,
+		`INSERT INTO links (uuid, user_id, short_url, original_url) VALUES ($1, $2, $3, $4) ON CONFLICT (original_url) DO NOTHING`, data.UUID, data.ShortURL, data.OriginalURL, data.UserID,
 	)
 
 	if err != nil {
@@ -108,6 +109,34 @@ func (s *DatabaseStorage) GetShortURL(key string) (*URLData, error) {
 		ShortURL:    shortURL,
 		OriginalURL: originalURL,
 	}, nil
+}
+
+func (s *DatabaseStorage) GetURLsByUserID(userID string) ([]URLData, error) {
+	var (
+		entity URLData
+		result []URLData
+	)
+
+	query := "select short_url, original_url from links where user_id=$1"
+	rows, err := s.db.Query(query, userID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	for rows.Next() {
+		err = rows.Scan(&entity.ShortURL, &entity.OriginalURL)
+		if err != nil {
+			break
+		}
+		result = append(result, entity)
+	}
+
+	return result, nil
 }
 
 func (s *DatabaseStorage) Ping() error {

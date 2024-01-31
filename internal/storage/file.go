@@ -12,6 +12,11 @@ type FileStorage struct {
 	filePath      string
 }
 
+func (fs *FileStorage) GetURLsByUserID(userID string) ([]URLData, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func newFileStorage(filePath string) *FileStorage {
 	memoryStorage := newMemoryStorage()
 	fs := FileStorage{

@@ -36,6 +36,7 @@ func main() {
 	r.Use(compress.GzipMiddleware)
 	r.Use(handlers.WithLogging)
 
+	r.Post("/api/user/urls", h.GetUserURLs)
 	r.Post("/api/shorten", h.CreateShortURLAPI)
 	r.Post("/api/shorten/batch", h.CreateBatchURLs)
 	r.Post("/", h.CreateShortURL)

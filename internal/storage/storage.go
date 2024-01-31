@@ -6,12 +6,14 @@ type URLData struct {
 	UUID        string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
+	UserID      string `json:"user_id"`
 }
 
 type Storage interface {
 	SaveURL(data URLData) (*URLData, error)
 	GetShortURL(key string) (*URLData, error)
 	Ping() error
+	GetURLsByUserID(userID string) ([]URLData, error)
 }
 
 func NewStorage(cfg *config.Config) Storage {
