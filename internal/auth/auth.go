@@ -14,7 +14,7 @@ type Claims struct {
 	UserID string
 }
 
-const TokenExp = time.Hour * 3
+const TokenExp = time.Hour * 1
 const SecretKey = "supersecretkey"
 const CookieName = "auth"
 
@@ -37,19 +37,19 @@ func GetUserID(w http.ResponseWriter, r *http.Request) (string, error) {
 	token, err := jwt.ParseWithClaims(cookie.Value, claims,
 		func(t *jwt.Token) (interface{}, error) {
 			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("unexpected signing method: %v", t.Header["alg"])
+				return nil, err
 			}
 			return []byte(SecretKey), nil
 		})
 	if err != nil {
-		return "", err
+		cookie, err = generateCookie()
+		http.SetCookie(w, cookie)
 	}
 
 	if !token.Valid {
-		return "", fmt.Errorf("token is not valid")
+		cookie, err = generateCookie()
+		http.SetCookie(w, cookie)
 	}
-
-	fmt.Println("Token is valid")
 	return claims.UserID, nil
 }
 

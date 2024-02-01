@@ -50,7 +50,7 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 	userID, err := auth.GetUserID(res, req)
 
 	if err != nil {
-		res.WriteHeader(http.StatusUnauthorized)
+		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -60,6 +60,7 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	url := string(body)
+	fmt.Println("body = ", body)
 	if len(url) == 0 {
 		res.WriteHeader(http.StatusBadRequest)
 		return
@@ -86,6 +87,7 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	res.Header().Set("content-type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte(fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, data.ShortURL)))
 }
@@ -148,7 +150,7 @@ func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
 	userID, err := auth.GetUserID(w, r)
 
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -227,6 +229,8 @@ func (h *Handlers) PingHandler(res http.ResponseWriter, req *http.Request) {
 func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
 	userID, err := auth.GetUserID(res, req)
 
+	fmt.Println("check urls = ", userID, err)
+
 	if err != nil {
 		res.WriteHeader(http.StatusUnauthorized)
 		return
@@ -236,7 +240,7 @@ func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		res.Header().Set("Content-Type", "application/json")
-		res.WriteHeader(http.StatusInternalServerError)
+		res.WriteHeader(http.StatusNoContent)
 		return
 	}
 
