@@ -13,8 +13,7 @@ type FileStorage struct {
 }
 
 func (fs *FileStorage) GetURLsByUserID(userID string) ([]URLData, error) {
-	//TODO implement me
-	panic("implement me")
+	return fs.memoryStorage.GetURLsByUserID(userID)
 }
 
 func newFileStorage(filePath string) *FileStorage {
