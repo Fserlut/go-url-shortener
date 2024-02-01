@@ -137,7 +137,7 @@ func (s *DatabaseStorage) GetURLsByUserID(userID string) ([]URLData, error) {
 	}
 
 	if len(result) == 0 {
-		return nil, errors.New("no batches by provided userID")
+		return nil, errors.New("userID don't have URLs")
 	}
 
 	return result, nil
