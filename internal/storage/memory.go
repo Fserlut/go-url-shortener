@@ -11,9 +11,9 @@ type MemoryStorage struct {
 func (s *MemoryStorage) GetURLsByUserID(userID string) ([]URLData, error) {
 	var result []URLData
 
-	for _, storageUrl := range s.storageURL {
-		if storageUrl.UUID == userID {
-			result = append(result, storageUrl)
+	for _, storageURLItem := range s.storageURL {
+		if storageURLItem.UUID == userID {
+			result = append(result, storageURLItem)
 		}
 	}
 
