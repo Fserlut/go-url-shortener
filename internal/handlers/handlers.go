@@ -240,7 +240,7 @@ func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		res.Header().Set("Content-Type", "application/json")
-		res.WriteHeader(http.StatusNoContent)
+		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
