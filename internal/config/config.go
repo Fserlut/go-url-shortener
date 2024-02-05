@@ -45,13 +45,13 @@ func InitConfig() *Config {
 		cfg.FileStoragePath = envFileStoragePath
 	}
 
-	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
-		cfg.DatabaseDSN = envDatabaseDSN
-	}
+	//if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
+	//	cfg.DatabaseDSN = envDatabaseDSN
+	//}
 
-	if cfg.DatabaseDSN != "" {
-		cfg.StorageType = "db"
-	}
+	//if cfg.DatabaseDSN != "" {
+	//	cfg.StorageType = "db"
+	//}
 
 	return cfg
 }

@@ -9,8 +9,20 @@ type MemoryStorage struct {
 }
 
 func (s *MemoryStorage) DeleteURL(shortURL string, userID string) error {
-	//TODO implement me
-	panic("implement me")
+	if value, ok := s.storageURL[shortURL]; ok {
+		if value.UserID == userID {
+			s.storageURL[value.ShortURL] = URLData{
+				OriginalURL: value.OriginalURL,
+				ShortURL:    value.ShortURL,
+				UUID:        value.UUID,
+				UserID:      value.UserID,
+				IsDeleted:   true,
+			}
+			return nil
+		}
+		return errors.New("access denied")
+	}
+	return errors.New("URL not found")
 }
 
 func (s *MemoryStorage) GetURLsByUserID(userID string) ([]URLData, error) {
