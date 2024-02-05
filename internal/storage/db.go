@@ -98,7 +98,7 @@ func (s *DatabaseStorage) GetURLsByUserID(userID string) ([]URLData, error) {
 		result []URLData
 	)
 
-	query := "select short_url, original_url, is_deleted from links where user_id=$1"
+	query := "select short_url, original_url from links where user_id=$1"
 	rows, err := s.db.Query(query, userID)
 
 	if err != nil {
