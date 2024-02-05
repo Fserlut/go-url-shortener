@@ -239,14 +239,10 @@ func (h *Handlers) PingHandler(res http.ResponseWriter, req *http.Request) {
 func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
 	userID, err := auth.GetUserID(res, req)
 
-	fmt.Println(userID)
-
 	if err != nil {
 		res.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-
-	fmt.Println("HERE")
 
 	URLs, err := h.store.GetURLsByUserID(userID)
 

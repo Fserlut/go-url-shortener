@@ -70,12 +70,13 @@ func (s *DatabaseStorage) GetShortURL(key string) (*URLData, error) {
 		uuid        string
 		shortURL    string
 		originalURL string
+		isDeleted   bool
 	)
 	row := s.db.QueryRowContext(
 		context.Background(),
 		"SELECT uuid, short_url, original_url, is_deleted FROM links WHERE short_url = $1", key,
 	)
-	err := row.Scan(&uuid, &shortURL, &originalURL)
+	err := row.Scan(&uuid, &shortURL, &originalURL, &isDeleted)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -89,6 +90,7 @@ func (s *DatabaseStorage) GetShortURL(key string) (*URLData, error) {
 		UUID:        uuid,
 		ShortURL:    shortURL,
 		OriginalURL: originalURL,
+		IsDeleted:   isDeleted,
 	}, nil
 }
 
