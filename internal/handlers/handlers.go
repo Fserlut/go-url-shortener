@@ -301,7 +301,6 @@ func (h *Handlers) DeleteURLs(res http.ResponseWriter, req *http.Request) {
 	go h.MarkAsDeleted(inputCh, userID)
 
 	res.WriteHeader(http.StatusAccepted)
-	return
 }
 
 func (h *Handlers) MarkAsDeleted(inputShort chan string, userID string) {
