@@ -7,6 +7,7 @@ type URLData struct {
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
 	UserID      string `json:"user_id"`
+	IsDeleted   bool   `json:"is_deleted"`
 }
 
 type Storage interface {
@@ -14,6 +15,7 @@ type Storage interface {
 	GetShortURL(key string) (*URLData, error)
 	Ping() error
 	GetURLsByUserID(userID string) ([]URLData, error)
+	DeleteURL(string, string) error
 }
 
 func NewStorage(cfg *config.Config) Storage {

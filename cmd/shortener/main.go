@@ -36,13 +36,15 @@ func main() {
 	r.Use(compress.GzipMiddleware)
 	r.Use(handlers.WithLogging)
 
-	r.Get("/api/user/urls", h.GetUserURLs)
 	r.Post("/api/shorten", h.CreateShortURLAPI)
 	r.Post("/api/shorten/batch", h.CreateBatchURLs)
 	r.Post("/", h.CreateShortURL)
 
+	r.Get("/api/user/urls", h.GetUserURLs)
 	r.Get("/{id}", h.RedirectToLink)
 	r.Get("/ping", h.PingHandler)
+
+	r.Delete("/api/user/urls", h.DeleteURLs)
 
 	logger.Log.Info("Running server", zap.String("address", cfg.ServerAddress))
 

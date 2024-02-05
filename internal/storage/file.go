@@ -12,6 +12,11 @@ type FileStorage struct {
 	filePath      string
 }
 
+func (fs *FileStorage) DeleteURL(shortURL string, userID string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (fs *FileStorage) GetURLsByUserID(userID string) ([]URLData, error) {
 	return fs.memoryStorage.GetURLsByUserID(userID)
 }

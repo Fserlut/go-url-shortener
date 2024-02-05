@@ -60,7 +60,7 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	url := string(body)
-	fmt.Println("body = ", body)
+
 	if len(url) == 0 {
 		res.WriteHeader(http.StatusBadRequest)
 		return
@@ -71,6 +71,7 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 		UserID:      userID,
 		UUID:        uuid.New().String(),
 		ShortURL:    random.GetShortURL(),
+		IsDeleted:   false,
 	})
 
 	if err != nil {
@@ -117,6 +118,7 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 			UserID:      userID,
 			OriginalURL: reqItem.OriginalURL,
 			ShortURL:    random.GetShortURL(),
+			IsDeleted:   false,
 		})
 
 		if err != nil {
@@ -174,6 +176,7 @@ func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
 		UserID:      userID,
 		UUID:        uuid.New().String(),
 		ShortURL:    random.GetShortURL(),
+		IsDeleted:   false,
 	})
 
 	// заполняем модель ответа
@@ -208,9 +211,16 @@ func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) RedirectToLink(res http.ResponseWriter, req *http.Request) {
 	key := chi.URLParam(req, "id")
+
 	value, err := h.store.GetShortURL(key)
+
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if value.IsDeleted {
+		res.WriteHeader(http.StatusGone)
 		return
 	}
 
@@ -228,8 +238,6 @@ func (h *Handlers) PingHandler(res http.ResponseWriter, req *http.Request) {
 
 func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
 	userID, err := auth.GetUserID(res, req)
-
-	fmt.Println("check urls = ", userID, err)
 
 	if err != nil {
 		res.WriteHeader(http.StatusUnauthorized)
@@ -267,6 +275,55 @@ func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 	res.Write(response)
+}
+
+func (h *Handlers) DeleteURLs(res http.ResponseWriter, req *http.Request) {
+	userID, err := auth.GetUserID(res, req)
+
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	var urls []string
+	if err := json.NewDecoder(req.Body).Decode(&urls); err != nil {
+		logger.Log.Debug("cannot decode request JSON body", zap.Error(err))
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if len(urls) < 1 {
+		http.Error(res, "URLs not provided", http.StatusBadRequest)
+		return
+	}
+
+	inputCh := addShortURLs(urls)
+	go h.MarkAsDeleted(inputCh, userID)
+
+	res.WriteHeader(http.StatusAccepted)
+	return
+}
+
+func (h *Handlers) MarkAsDeleted(inputShort chan string, userID string) {
+	for linkToDelete := range inputShort {
+		err := h.store.DeleteURL(linkToDelete, userID)
+		if err != nil {
+			logger.Log.Error(fmt.Sprintf("Error on delete url %s", linkToDelete))
+		}
+	}
+}
+
+func addShortURLs(input []string) chan string {
+	inputCh := make(chan string, 10)
+
+	go func() {
+		defer close(inputCh)
+		for _, url := range input {
+			inputCh <- url
+		}
+	}()
+
+	return inputCh
 }
 
 func InitHandlers(store storage.Storage, cfg *config.Config) *Handlers {

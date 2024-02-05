@@ -8,6 +8,11 @@ type MemoryStorage struct {
 	storageURL map[string]URLData
 }
 
+func (s *MemoryStorage) DeleteURL(shortURL string, userID string) error {
+	//TODO implement me
+	panic("implement me")
+}
+
 func (s *MemoryStorage) GetURLsByUserID(userID string) ([]URLData, error) {
 	var result []URLData
 
