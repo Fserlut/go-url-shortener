@@ -19,8 +19,14 @@ import (
 )
 
 type Handlers struct {
-	store storage.Storage
-	cfg   *config.Config
+	store      storage.Storage
+	cfg        *config.Config
+	deleteChan chan DeleteData
+}
+
+type DeleteData struct {
+	URL    string
+	UserID string
 }
 
 type CreateShortURLRequest struct {
@@ -297,37 +303,28 @@ func (h *Handlers) DeleteURLs(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	inputCh := addShortURLs(urls)
-	go h.MarkAsDeleted(inputCh, userID)
+	for _, url := range urls {
+		h.deleteChan <- DeleteData{URL: url, UserID: userID}
+	}
 
 	res.WriteHeader(http.StatusAccepted)
 }
 
-func (h *Handlers) MarkAsDeleted(inputShort chan string, userID string) {
-	for linkToDelete := range inputShort {
-		err := h.store.DeleteURL(linkToDelete, userID)
-		if err != nil {
-			logger.Log.Error(fmt.Sprintf("Error on delete url %s", linkToDelete))
-		}
+func InitHandlers(store storage.Storage, cfg *config.Config) *Handlers {
+	h := &Handlers{
+		cfg:        cfg,
+		store:      store,
+		deleteChan: make(chan DeleteData, 100),
 	}
-}
-
-func addShortURLs(input []string) chan string {
-	inputCh := make(chan string, 10)
 
 	go func() {
-		defer close(inputCh)
-		for _, url := range input {
-			inputCh <- url
+		for data := range h.deleteChan {
+			err := h.store.DeleteURL(data.URL, data.UserID)
+			if err != nil {
+				logger.Log.Error(fmt.Sprintf("Error on delete url %s", data.URL))
+			}
 		}
 	}()
 
-	return inputCh
-}
-
-func InitHandlers(store storage.Storage, cfg *config.Config) *Handlers {
-	return &Handlers{
-		cfg:   cfg,
-		store: store,
-	}
+	return h
 }

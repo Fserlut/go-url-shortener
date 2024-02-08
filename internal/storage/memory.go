@@ -37,10 +37,10 @@ func (s *MemoryStorage) GetURLsByUserID(userID string) ([]URLData, error) {
 	return result, nil
 }
 
-func newMemoryStorage() *MemoryStorage {
+func newMemoryStorage() (*MemoryStorage, error) {
 	return &MemoryStorage{
 		storageURL: make(map[string]URLData),
-	}
+	}, nil
 }
 
 func (s *MemoryStorage) Ping() error {

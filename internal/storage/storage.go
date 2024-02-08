@@ -18,7 +18,7 @@ type Storage interface {
 	DeleteURL(string, string) error
 }
 
-func NewStorage(cfg *config.Config) Storage {
+func NewStorage(cfg *config.Config) (Storage, error) {
 	switch cfg.StorageType {
 	case "memory":
 		return newMemoryStorage()

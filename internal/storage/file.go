@@ -20,19 +20,23 @@ func (fs *FileStorage) GetURLsByUserID(userID string) ([]URLData, error) {
 	return fs.memoryStorage.GetURLsByUserID(userID)
 }
 
-func newFileStorage(filePath string) *FileStorage {
-	memoryStorage := newMemoryStorage()
+func newFileStorage(filePath string) (*FileStorage, error) {
+	memoryStorage, err := newMemoryStorage()
+	if err != nil {
+		return nil, err
+	}
+
 	fs := FileStorage{
 		memoryStorage: memoryStorage,
 		filePath:      filePath,
 	}
 
-	err := readFromFile(fs)
+	err = readFromFile(fs)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	return &fs
+	return &fs, nil
 }
 
 func readFromFile(fs FileStorage) error {

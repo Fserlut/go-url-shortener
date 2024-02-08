@@ -21,7 +21,13 @@ func main() {
 		panic(err)
 	}
 
-	store := storage.NewStorage(cfg)
+	store, err := storage.NewStorage(cfg)
+
+	if err != nil {
+		logger.Log.Error("Error on init storage")
+		panic(err)
+
+	}
 
 	h := handlers.InitHandlers(store, cfg)
 	r := chi.NewRouter()

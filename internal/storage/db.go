@@ -133,10 +133,10 @@ func (s *DatabaseStorage) Ping() error {
 	return nil
 }
 
-func newDBStorage(dsn string) *DatabaseStorage {
+func newDBStorage(dsn string) (*DatabaseStorage, error) {
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	_, err = db.Exec(`
@@ -153,10 +153,10 @@ func newDBStorage(dsn string) *DatabaseStorage {
 	`)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &DatabaseStorage{
 		db: db,
-	}
+	}, nil
 }
