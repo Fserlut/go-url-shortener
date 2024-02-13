@@ -19,8 +19,8 @@ var cfg *config.Config
 var store storage.Storage
 
 func TestMain(m *testing.M) {
-	cfg = config.InitConfig()       // Инициализация конфигурации
-	store = storage.NewStorage(cfg) // Инициализация хранилища
+	cfg = config.InitConfig()          // Инициализация конфигурации
+	store, _ = storage.NewStorage(cfg) // Инициализация хранилища
 
 	os.Exit(m.Run()) // Запускаем все тесты
 }

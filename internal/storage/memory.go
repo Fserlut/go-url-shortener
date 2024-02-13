@@ -8,10 +8,39 @@ type MemoryStorage struct {
 	storageURL map[string]URLData
 }
 
-func newMemoryStorage() *MemoryStorage {
+func (s *MemoryStorage) DeleteURL(shortURL string, userID string) error {
+	if value, ok := s.storageURL[shortURL]; ok {
+		if value.UserID == userID {
+			s.storageURL[value.ShortURL] = URLData{
+				OriginalURL: value.OriginalURL,
+				ShortURL:    value.ShortURL,
+				UUID:        value.UUID,
+				UserID:      value.UserID,
+				IsDeleted:   true,
+			}
+			return nil
+		}
+		return errors.New("access denied")
+	}
+	return errors.New("URL not found")
+}
+
+func (s *MemoryStorage) GetURLsByUserID(userID string) ([]URLData, error) {
+	var result []URLData
+
+	for _, storageURLItem := range s.storageURL {
+		if storageURLItem.UUID == userID {
+			result = append(result, storageURLItem)
+		}
+	}
+
+	return result, nil
+}
+
+func newMemoryStorage() (*MemoryStorage, error) {
 	return &MemoryStorage{
 		storageURL: make(map[string]URLData),
-	}
+	}, nil
 }
 
 func (s *MemoryStorage) Ping() error {

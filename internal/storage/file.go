@@ -12,19 +12,31 @@ type FileStorage struct {
 	filePath      string
 }
 
-func newFileStorage(filePath string) *FileStorage {
-	memoryStorage := newMemoryStorage()
+func (fs *FileStorage) DeleteURL(shortURL string, userID string) error {
+	return fs.memoryStorage.DeleteURL(shortURL, userID)
+}
+
+func (fs *FileStorage) GetURLsByUserID(userID string) ([]URLData, error) {
+	return fs.memoryStorage.GetURLsByUserID(userID)
+}
+
+func newFileStorage(filePath string) (*FileStorage, error) {
+	memoryStorage, err := newMemoryStorage()
+	if err != nil {
+		return nil, err
+	}
+
 	fs := FileStorage{
 		memoryStorage: memoryStorage,
 		filePath:      filePath,
 	}
 
-	err := readFromFile(fs)
+	err = readFromFile(fs)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	return &fs
+	return &fs, nil
 }
 
 func readFromFile(fs FileStorage) error {

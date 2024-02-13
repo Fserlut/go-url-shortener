@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 
+	"github.com/Fserlut/go-url-shortener/internal/auth"
 	"github.com/Fserlut/go-url-shortener/internal/config"
 	"github.com/Fserlut/go-url-shortener/internal/logger"
 	"github.com/Fserlut/go-url-shortener/internal/storage"
@@ -18,8 +19,14 @@ import (
 )
 
 type Handlers struct {
-	store storage.Storage
-	cfg   *config.Config
+	store      storage.Storage
+	cfg        *config.Config
+	deleteChan chan DeleteData
+}
+
+type DeleteData struct {
+	URL    string
+	UserID string
 }
 
 type CreateShortURLRequest struct {
@@ -40,13 +47,26 @@ type CreateBatchShortenResponseItem struct {
 	ShortURL      string `json:"short_url"`
 }
 
+type UserLinksResponseItem struct {
+	ShortURL    string `json:"short_url"`
+	OriginalURL string `json:"original_url"`
+}
+
 func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
+	userID, err := auth.GetUserID(res, req)
+
+	if err != nil {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	url := string(body)
+
 	if len(url) == 0 {
 		res.WriteHeader(http.StatusBadRequest)
 		return
@@ -54,8 +74,10 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 
 	data, err := h.store.SaveURL(storage.URLData{
 		OriginalURL: url,
+		UserID:      userID,
 		UUID:        uuid.New().String(),
 		ShortURL:    random.GetShortURL(),
+		IsDeleted:   false,
 	})
 
 	if err != nil {
@@ -72,14 +94,22 @@ func (h *Handlers) CreateShortURL(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	res.Header().Set("content-type", "text/plain")
 	res.WriteHeader(http.StatusCreated)
 	res.Write([]byte(fmt.Sprintf("%s/%s", h.cfg.BaseReturnURL, data.ShortURL)))
 }
 
 func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserID(w, r)
+
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	var reqURLs []CreateBatchShortenRequestItem
 
-	err := json.NewDecoder(r.Body).Decode(&reqURLs)
+	err = json.NewDecoder(r.Body).Decode(&reqURLs)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -91,8 +121,10 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 	for _, reqItem := range reqURLs {
 		shortData, err := h.store.SaveURL(storage.URLData{
 			UUID:        uuid.New().String(),
+			UserID:      userID,
 			OriginalURL: reqItem.OriginalURL,
 			ShortURL:    random.GetShortURL(),
+			IsDeleted:   false,
 		})
 
 		if err != nil {
@@ -123,6 +155,13 @@ func (h *Handlers) CreateBatchURLs(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
+	userID, err := auth.GetUserID(w, r)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
 	logger.Log.Debug("decoding request")
 	var req CreateShortURLRequest
 
@@ -140,8 +179,10 @@ func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
 
 	data, err := h.store.SaveURL(storage.URLData{
 		OriginalURL: req.URL,
+		UserID:      userID,
 		UUID:        uuid.New().String(),
 		ShortURL:    random.GetShortURL(),
+		IsDeleted:   false,
 	})
 
 	// заполняем модель ответа
@@ -155,8 +196,6 @@ func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, &storage.ErrURLExists{}) {
 			w.Header().Set("content-type", "application/json")
 			w.WriteHeader(http.StatusConflict)
-
-			fmt.Println(respJSON)
 
 			_, err = w.Write(respJSON)
 			if err != nil {
@@ -178,9 +217,16 @@ func (h *Handlers) CreateShortURLAPI(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) RedirectToLink(res http.ResponseWriter, req *http.Request) {
 	key := chi.URLParam(req, "id")
+
 	value, err := h.store.GetShortURL(key)
+
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if value.IsDeleted {
+		res.WriteHeader(http.StatusGone)
 		return
 	}
 
@@ -196,9 +242,89 @@ func (h *Handlers) PingHandler(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusOK)
 }
 
-func InitHandlers(store storage.Storage, cfg *config.Config) *Handlers {
-	return &Handlers{
-		cfg:   cfg,
-		store: store,
+func (h *Handlers) GetUserURLs(res http.ResponseWriter, req *http.Request) {
+	userID, err := auth.GetUserID(res, req)
+
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
 	}
+
+	URLs, err := h.store.GetURLsByUserID(userID)
+
+	if err != nil {
+		res.Header().Set("Content-Type", "application/json")
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	if len(URLs) < 1 {
+		res.Header().Set("Content-Type", "application/json")
+		res.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	var result []UserLinksResponseItem
+
+	for _, v := range URLs {
+		shortURL := h.cfg.BaseReturnURL + "/" + v.ShortURL
+		b := &UserLinksResponseItem{shortURL, v.OriginalURL}
+		result = append(result, *b)
+	}
+
+	response, err := json.Marshal(result)
+	if err != nil {
+		res.Header().Set("Content-Type", "application/json")
+		http.Error(res, "Failed to write response", http.StatusInternalServerError)
+		return
+	}
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusOK)
+	res.Write(response)
+}
+
+func (h *Handlers) DeleteURLs(res http.ResponseWriter, req *http.Request) {
+	userID, err := auth.GetUserID(res, req)
+
+	if err != nil {
+		res.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	var urls []string
+	if err := json.NewDecoder(req.Body).Decode(&urls); err != nil {
+		logger.Log.Debug("cannot decode request JSON body", zap.Error(err))
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if len(urls) < 1 {
+		http.Error(res, "URLs not provided", http.StatusBadRequest)
+		return
+	}
+
+	for _, url := range urls {
+		h.deleteChan <- DeleteData{URL: url, UserID: userID}
+	}
+
+	res.WriteHeader(http.StatusAccepted)
+}
+
+func InitHandlers(store storage.Storage, cfg *config.Config) *Handlers {
+	h := &Handlers{
+		cfg:        cfg,
+		store:      store,
+		deleteChan: make(chan DeleteData, 100),
+	}
+
+	go func() {
+		for data := range h.deleteChan {
+			err := h.store.DeleteURL(data.URL, data.UserID)
+			if err != nil {
+				logger.Log.Error(fmt.Sprintf("Error on delete url %s", data.URL))
+			}
+		}
+	}()
+
+	return h
 }

@@ -21,7 +21,13 @@ func main() {
 		panic(err)
 	}
 
-	store := storage.NewStorage(cfg)
+	store, err := storage.NewStorage(cfg)
+
+	if err != nil {
+		logger.Log.Error("Error on init storage")
+		panic(err)
+
+	}
 
 	h := handlers.InitHandlers(store, cfg)
 	r := chi.NewRouter()
@@ -40,8 +46,11 @@ func main() {
 	r.Post("/api/shorten/batch", h.CreateBatchURLs)
 	r.Post("/", h.CreateShortURL)
 
+	r.Get("/api/user/urls", h.GetUserURLs)
 	r.Get("/{id}", h.RedirectToLink)
 	r.Get("/ping", h.PingHandler)
+
+	r.Delete("/api/user/urls", h.DeleteURLs)
 
 	logger.Log.Info("Running server", zap.String("address", cfg.ServerAddress))
 
